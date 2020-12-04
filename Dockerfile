@@ -20,3 +20,4 @@ COPY . /app
 ENTRYPOINT ["python"]
 
 CMD ["server.py"]
+
