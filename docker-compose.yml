@@ -1,0 +1,60 @@
+version: "3"
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./api:/app
+      - ./data:/data
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - smoosher
+  worker:
+    build:
+      context: workers 
+      dockerfile: Dockerfile
+    volumes:
+      - ./workers:/queue
+    depends_on:
+      - redis
+    networks:
+      - smoosher
+  monitor:
+    build:
+      context: workers
+      dockerfile: Dockerfile
+    ports:
+     - "5555:5555"
+    entrypoint: flower
+    command:  -A tasks --port=5555 --broker=redis://redis:6379/0
+    depends_on:
+      - redis
+    networks:
+      - smoosher
+  postgres:
+    image: postgres
+    networks:
+      - smoosher
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    expose:
+      - 5432
+
+    
+  redis:
+    image: redis
+    volumes: 
+      - ./redis_data:/data
+    networks:
+      - smoosher
+networks:
+  smoosher:
+
+volumes:
+  pg_data:
